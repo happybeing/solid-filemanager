@@ -18,10 +18,27 @@ export const initApp = (): MyThunk => (dispatch, getState) => {
 export const solidLogin = (): MyThunk => (dispatch, getState) => {
     dispatch(displayLoading());
 
-    solidPopupLogin()
-        .then(session => dispatch(updateLoginStatus(session)))
-        .catch(r => dispatch(setErrorMessage(String(r))))
-        .finally(() => dispatch(stopLoading()));
+    // solidPopupLogin()
+    //     .then(session => dispatch(updateLoginStatus(session)))
+    //     .catch(r => dispatch(setErrorMessage(String(r))))
+    //     .finally(() => dispatch(stopLoading()));
+
+    let promise = solidPopupLogin()
+    // console.log('solidLogin() Promise.toSource():', Promise.toSource())
+    // BUG WITH SAFE solid-auth-client because the
+    // promise doesn't support finally(), which looks
+    // like it might be because a promise library is
+    // blocking out the native (Firefox) promise impn.
+
+    promise.then((session) => {
+          dispatch(updateLoginStatus(session))
+          dispatch(stopLoading())
+        }).catch((r) => {
+          dispatch(setErrorMessage(String(r)))
+          dispatch(stopLoading())
+        // }).finally(() => {
+        // dispatch(stopLoading())
+      });
 };
 
 export const updateLoginStatus = (session?: Session|null): MyThunk => async (dispatch, getState) => {
@@ -53,9 +70,12 @@ export const solidLogout = (): MyThunk => (dispatch, getState) => {
             dispatch(resetWebId());
 
             dispatch(openDialog(DIALOGS.CHOOSE_LOCATION));
-        })
-        .catch(r => dispatch(setErrorMessage(String(r))))
-        .finally(() => dispatch(stopLoading()));
+            dispatch(stopLoading())
+        }).catch((r) => {
+            dispatch(setErrorMessage(String(r)))
+            dispatch(stopLoading())
+        });
+        // .finally(() => dispatch(stopLoading()));
 };
 
 export const clearCache = (): MyThunk => (dispatch, getState) => APIHandler.clearCache();
@@ -81,9 +101,13 @@ export const uploadFiles = (): MyThunk => (dispatch, getState) => {
                 dispatch(resetFileUploader());
             }, 300);
             dispatch(displayCurrentItemList());
+            dispatch(stopLoading())
         })
-        .catch(r => dispatch(setErrorMessage(String(r))))
-        .finally(() => dispatch(stopLoading()));
+        .catch((r) => {
+            dispatch(setErrorMessage(String(r)))
+            dispatch(stopLoading())
+        });
+        // .finally(() => dispatch(stopLoading()));
 };
 
 
@@ -104,9 +128,13 @@ export const createFile = (fileName: string): MyThunk => (dispatch, getState) =>
                 throw new Error("Couldn't load created file for editing");
             dispatch(selectItem(item));
             dispatch(getFileContent(item.name));
+            dispatch(stopLoading())
         })
-        .catch(r => dispatch(setErrorMessage(String(r))))
-        .finally(() => dispatch(stopLoading()));
+        .catch((r) => {
+            dispatch(setErrorMessage(String(r)))
+            dispatch(stopLoading())
+        });
+        // .finally(() => dispatch(stopLoading()));
 };
 
 
@@ -118,9 +146,13 @@ export const updateTextFile = (fileName: string, content: Blob|string): MyThunk 
         .then(r => {
             dispatch(closeDialog(DIALOGS.EDIT));
             dispatch(displayCurrentItemList());
+            dispatch(stopLoading())
         })
-        .catch(r => dispatch(setErrorMessage(String(r))))
-        .finally(() => dispatch(stopLoading()));
+        .catch((r) => {
+            dispatch(setErrorMessage(String(r)))
+            dispatch(stopLoading())
+        });
+        // .finally(() => dispatch(stopLoading()));
 }
 
 /**
@@ -131,9 +163,15 @@ export const displayCurrentItemList = (): MyThunk => (dispatch, getState) => {
     dispatch(displayLoading());
     dispatch(resetSelectedItems());
     APIHandler.getItemList(path.join('/'))
-        .then(items => dispatch(setItems(items)))
-        .catch(r => dispatch(setErrorMessage(String(r))))
-        .finally(() => dispatch(stopLoading()));
+        .then(items => {
+          dispatch(setItems(items))
+          dispatch(stopLoading())
+        })
+        .catch((r) => {
+            dispatch(setErrorMessage(String(r)))
+            dispatch(stopLoading())
+        });
+        // .finally(() => dispatch(stopLoading()));
 };
 
 /**
@@ -157,9 +195,13 @@ export const renameFile = (fileName: string, newFileName: string): MyThunk => (d
         .then(() => {
             dispatch(displayCurrentItemList());
             dispatch(closeDialog(DIALOGS.RENAME));
+            dispatch(stopLoading())
         })
-        .catch(r => dispatch(setErrorMessage(String(r))))
-        .finally(() => dispatch(stopLoading()));
+        .catch((r) => {
+            dispatch(setErrorMessage(String(r)))
+            dispatch(stopLoading())
+        });
+        // .finally(() => dispatch(stopLoading()));
 };
 
 /**
@@ -173,9 +215,13 @@ export const renameFolder = (folderName: string, newFolderName: string): MyThunk
         .then(() => {
             dispatch(displayCurrentItemList());
             dispatch(closeDialog(DIALOGS.RENAME));
+            dispatch(stopLoading())
         })
-        .catch(r => dispatch(setErrorMessage(String(r))))
-        .finally(() => dispatch(stopLoading()));
+        .catch((r) => {
+            dispatch(setErrorMessage(String(r)))
+            dispatch(stopLoading())
+        });
+        // .finally(() => dispatch(stopLoading()));
 };
 
 /**
@@ -223,8 +269,11 @@ export const zipAndUpload = (items: Item[]): MyThunk => (dispatch, getState) => 
         .then(zip => zip.generateAsync({ type: 'blob' }))
         .then(blob => APIHandler.updateFile(path.join('/'), archiveName, blob))
         .then(() => dispatch(displayCurrentItemList()))
-        .catch(r => dispatch(setErrorMessage(String(r))))
-        .finally(() => dispatch(stopLoading()));
+        .catch((r) => {
+            dispatch(setErrorMessage(String(r)))
+            dispatch(stopLoading())
+        });
+        // .finally(() => dispatch(stopLoading()));
 };
 
 /**
@@ -235,9 +284,15 @@ export const extractZipFile = (fileName: string): MyThunk => (dispatch, getState
     dispatch(displayLoading());
 
     APIHandler.extractZipArchive(path.join('/'), path.join('/'), fileName)
-        .then(r => dispatch(displayCurrentItemList()))
-        .catch(r => dispatch(setErrorMessage(String(r))))
-        .finally(() => dispatch(stopLoading()));
+        .then(r => {
+            dispatch(displayCurrentItemList())
+            dispatch(stopLoading())
+        })
+        .catch((r) => {
+            dispatch(setErrorMessage(String(r)))
+            dispatch(stopLoading())
+        });
+        // .finally(() => dispatch(stopLoading()));
 };
 
 // code based on https://stackoverflow.com/a/30832210/6548154
@@ -275,9 +330,14 @@ export const getFileContent = (fileName: string): MyThunk => (dispatch, getState
     dispatch(resetFileContent());
 
     APIHandler.getFileBlob(path.join('/'), fileName)
-        .then(blob => dispatch(setFileContent(blob)))
-        .catch(r => dispatch(setErrorMessage(String(r))))
-        .finally(() => dispatch(stopLoading()));
+        .then((blob) => {
+            dispatch(setFileContent(blob))
+            dispatch(stopLoading())
+        })
+        .catch((r) => { dispatch(setErrorMessage(String(r)))
+            dispatch(stopLoading())
+        });
+        // .finally(() => dispatch(stopLoading()));
 };
 
 
@@ -318,9 +378,13 @@ export const createNewFolder = (folderName: string): MyThunk => (dispatch, getSt
         .then(r => {
             dispatch(displayCurrentItemList());
             dispatch(closeDialog(DIALOGS.CREATE_FOLDER));
+            dispatch(stopLoading())
         })
-        .catch(r => dispatch(setErrorMessage(String(r))))
-        .finally(() => dispatch(stopLoading()));
+        .catch((r) => {
+            dispatch(setErrorMessage(String(r)))
+            dispatch(stopLoading())
+        });
+        // .finally(() => dispatch(stopLoading()));
 };
 
 
@@ -334,9 +398,15 @@ export const removeItems = (items: Item[]): MyThunk => (dispatch, getState) => {
     const itemNames = items.map(f => f.name);
 
     APIHandler.removeItems(path.join('/'), itemNames)
-        .then(r => dispatch(displayCurrentItemList()))
-        .catch(r => dispatch(setErrorMessage(String(r))))
-        .finally(() => dispatch(stopLoading()));
+        .then(r => {
+            dispatch(displayCurrentItemList())
+            dispatch(stopLoading())
+        })
+        .catch(r => {
+            dispatch(setErrorMessage(String(r)))
+            dispatch(stopLoading())
+        });
+        // .finally(() => dispatch(stopLoading()));
 };
 
 
@@ -355,9 +425,13 @@ export const moveItems = (items: Item[], { host, path: targetPath }: { host: str
         .then(r => {
             dispatch(displayCurrentItemList());
             dispatch(closeDialog(DIALOGS.MOVE));
+            dispatch(stopLoading())
         })
-        .catch(r => dispatch(setErrorMessage(String(r))))
-        .finally(() => dispatch(stopLoading()));
+        .catch(r => {
+            dispatch(setErrorMessage(String(r)))
+            dispatch(stopLoading())
+      });
+        // .finally(() => dispatch(stopLoading()));
 };
 
 
@@ -375,9 +449,13 @@ export const copyItems = (items: Item[], { host, path: targetPath }: { host: str
         .then(r => {
             dispatch(displayCurrentItemList());
             dispatch(closeDialog(DIALOGS.COPY));
+            dispatch(stopLoading())
         })
-        .catch(r => dispatch(setErrorMessage(String(r))))
-        .finally(() => dispatch(stopLoading()));
+        .catch(r => {
+            dispatch(setErrorMessage(String(r)))
+            dispatch(stopLoading())
+        });
+        // .finally(() => dispatch(stopLoading()));
 };
 
 
