@@ -15,7 +15,8 @@ interface AsyncStorage {
 type loginOptions = {
     callbackUri?: string,
     popupUri: string,
-    storage?: AsyncStorage
+    storage?: AsyncStorage,
+    safeAppInfo: { id: string, name: string, vendor: string }
 }
 
 type webIdOidcSession = {

@@ -36,10 +36,20 @@ export const updateLoginStatus = (session?: Session|null): MyThunk => async (dis
     }
 }
 
-async function solidPopupLogin() {
-    return solidAuth.popupLogin({ popupUri: './vendor/solid-auth-client/popup.html' });
+// Manually taken from package.json:
+const appInfo = {
+  id: 'https://github.com/otto-aa/solid-filemanager',
+  name: 'solid-filemanager',
+  vendor: 'A_A'
 }
 
+ async function solidPopupLogin() {
+    return solidAuth.popupLogin(
+      {
+        popupUri: './vendor/solid-auth-client/popup.html',
+        safeAppInfo: appInfo
+      });
+}
 
 export const solidLogout = (): MyThunk => (dispatch, getState) => {
     dispatch(displayLoading());
